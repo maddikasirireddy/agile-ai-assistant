@@ -213,5 +213,41 @@ class TestHybridFeatures(unittest.TestCase):
         self.assertIn("contains the following ingredients", reply4.lower())
         self.assertIn("Charcoal", reply4)
 
+        # ====================================================
+        # Test 6: Persisted Product State Add to Cart Flows
+        # ====================================================
+        
+        # Flow 1: Tell me about Neem Soap → add to cart
+        reset_session(sid)
+        cart = []
+        reply_info, cart = run_hybrid_chat_flow("Tell me about Neem Soap", [], cart, session_id=sid)
+        self.assertIn("Neem Soap - Handmade", reply_info)
+        reply_add, cart = run_hybrid_chat_flow("add to cart", [], cart, session_id=sid)
+        self.assertIn("added", reply_add.lower())
+        self.assertEqual(len(cart), 1)
+        self.assertEqual(cart[0]["product_id"], 9325)
+        
+        # Flow 2: Tell me about Anti-Acne Serum → add it to my cart
+        reset_session(sid)
+        cart = []
+        reply_info, cart = run_hybrid_chat_flow("Tell me about Anti-Acne Serum", [], cart, session_id=sid)
+        self.assertIn("Anti-Acne Serum", reply_info)
+        reply_add, cart = run_hybrid_chat_flow("add it to my cart", [], cart, session_id=sid)
+        self.assertIn("added", reply_add.lower())
+        self.assertEqual(len(cart), 1)
+        self.assertEqual(cart[0]["product_id"], 9452)
+        
+        # Flow 3: Tell me about Charcoal & Lavender Soap → add to cart
+        reset_session(sid)
+        cart = []
+        reply_info, cart = run_hybrid_chat_flow("Tell me about Charcoal & Lavender Soap", [], cart, session_id=sid)
+        self.assertIn("Did you mean one of these", reply_info) # Clarification required
+        reply_info2, cart = run_hybrid_chat_flow("Charcoal & Lavender Soap - Handmade", [{"role": "ai", "text": reply_info}], cart, session_id=sid)
+        self.assertIn("Charcoal & Lavender Soap - Handmade", reply_info2)
+        reply_add, cart = run_hybrid_chat_flow("add to cart", [], cart, session_id=sid)
+        self.assertIn("added", reply_add.lower())
+        self.assertEqual(len(cart), 1)
+        self.assertEqual(cart[0]["product_id"], 9431)
+
 if __name__ == "__main__":
     unittest.main()

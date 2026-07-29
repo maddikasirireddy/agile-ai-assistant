@@ -334,7 +334,11 @@ def run_hybrid_chat_flow(
             # Pronoun/Context reference fallback
             is_explicit_pronoun = any(term in message.lower() for term in ["it", "that", "this", "those", "them"])
             if (
-                intent in ("ingredient_information", "product_price", "product_availability", "product_usage", "product_information") or
+                intent in (
+                    "ingredient_information", "product_price", "product_availability", 
+                    "product_usage", "product_information", "add_to_cart", 
+                    "remove_from_cart", "buy_now", "quantity_change"
+                ) or
                 is_explicit_pronoun or
                 any(term in message.lower() for term in ["soap", "shampoo", "powder", "oil", "butter", "lotion", "serum"])
             ):
@@ -416,7 +420,9 @@ def run_hybrid_chat_flow(
 
         # Shopping Action: Add to Cart
         elif intent == "add_to_cart":
+            logger.info(f"[CART DEBUG] selected_product before add: {target_product.get('name') if target_product else 'None'}")
             if target_product:
+                logger.info(f"[CART DEBUG] Adding selected product: {target_product.get('name')}")
                 reply = add_to_cart(target_product.get("id"), 1)
                 source = "Local Cart Add Action"
             else:
