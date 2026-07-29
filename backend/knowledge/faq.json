@@ -1,0 +1,20 @@
+{
+  "questions": [
+    {
+      "keywords": ["organic", "natural", "chemical"],
+      "answer": "All Agile Wellness products are 100% natural, herbal, and organic. We do not use any harsh synthetic chemicals, artificial fragrances, or parabens. Our products are formulated using pure cold-pressed oils, plant extracts, and organic powders."
+    },
+    {
+      "keywords": ["baby", "infant", "child", "kids"],
+      "answer": "Yes! We have a dedicated baby care range including Baby Hair Oil and Moisturizing Lip Butters. All baby care products are formulated with extremely gentle, dermatologically tested, 100% natural ingredients that are safe for soft, sensitive baby skin."
+    },
+    {
+      "keywords": ["safe", "side effect", "allergy", "sensitive"],
+      "answer": "Our products are made from natural, premium ingredients and are generally safe for all skin and hair types. However, if you have highly sensitive skin or specific allergies, we recommend doing a 24-hour patch test on a small area of skin before regular use."
+    },
+    {
+      "keywords": ["certified", "lab test", "testing"],
+      "answer": "Yes, all Agile Wellness products are manufactured in GMP-certified facilities and undergo rigorous quality and purity laboratory testing to ensure the highest standards of safety and efficacy."
+    }
+  ]
+}

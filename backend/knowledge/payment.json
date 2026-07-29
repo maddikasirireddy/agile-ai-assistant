@@ -1,0 +1,23 @@
+{
+  "payment": {
+    "methods": [
+      {
+        "name": "UPI / QR Code",
+        "details": "Pay instantly using Google Pay, PhonePe, Paytm, BHIM, or any banking app."
+      },
+      {
+        "name": "Credit & Debit Cards",
+        "details": "All major cards accepted including Visa, Mastercard, RuPay, and Maestro."
+      },
+      {
+        "name": "Cash on Delivery (COD)",
+        "details": "Available on orders below ₹2,000 for a nominal convenience fee of ₹30."
+      },
+      {
+        "name": "Net Banking",
+        "details": "Secure checkout using all major Indian retail bank accounts."
+      }
+    ],
+    "security": "All online transactions are encrypted and processed securely via Razorpay, our authorized payment gateway partner. We do not store card details or payment credentials on our servers."
+  }
+}

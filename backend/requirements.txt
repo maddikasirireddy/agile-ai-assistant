@@ -1,0 +1,21 @@
+# Agile Wellness AI Backend — Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# ── Web Framework ──────────────────────────────────────────────
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+python-dotenv==1.0.1
+
+# ── AI / Gemini ────────────────────────────────────────────────
+google-generativeai==0.8.3
+
+# ── WooCommerce ────────────────────────────────────────────────
+WooCommerce==3.0.0
+requests==2.34.2
+
+# ── Data Validation ───────────────────────────────────────────
+pydantic==2.13.4
+
+# ── HTTP / Core ────────────────────────────────────────────────
+httptools==0.8.0
+uvloop==0.22.1; sys_platform != "win32"

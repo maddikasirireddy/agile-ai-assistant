@@ -1,0 +1,78 @@
+/* ============================================================
+   index.css — Global Design System for Agile Wellness Chatbot
+   ============================================================ */
+
+/* --- Google Fonts (Inter) --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* --- CSS Custom Properties (Design Tokens matching the store) --- */
+:root {
+  /* Color Palette */
+  --color-bg:           #f6f8f5;       /* Off-white light background */
+  --color-surface:      #ffffff;       /* White headers and side sheets */
+  --color-surface-2:    #edf2eb;       /* Subtle sage-green tinted gray */
+  --color-border:       #dbe3d6;       /* Soft warm border */
+  --color-accent:       #60863a;       /* Olive brand green from store */
+  --color-accent-dark:  #4e6e2e;       /* Dark active green */
+  --color-accent-glow:  rgba(96, 134, 58, 0.12);
+  --color-user-bubble:  #e9f0e4;       /* Soft olive user bubble */
+  --color-ai-bubble:    #ffffff;       /* Clean white AI bubble */
+  --color-text:         #2a3321;       /* Dark olive-charcoal text */
+  --color-text-muted:   #68755f;       /* Sage-charcoal muted text */
+  --color-error:        #d93838;       /* Clean red */
+  --color-send-btn:     linear-gradient(135deg, #60863a, #4e6e2e);
+
+  /* Typography */
+  --font-family: 'Inter', sans-serif;
+  --font-size-base: 14.5px;
+  --line-height-base: 1.6;
+
+  /* Spacing */
+  --radius-bubble: 16px;
+  --radius-input:  12px;
+  --radius-card:   14px;
+
+  /* Shadows */
+  --shadow-card: 0 4px 18px rgba(96, 134, 58, 0.06);
+  --shadow-glow: 0 0 12px rgba(96, 134, 58, 0.12);
+
+  /* Transitions */
+  --transition: 0.2s ease;
+}
+
+/* --- Reset & Base --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden; /* prevent outer scroll */
+}
+
+/* --- Scrollbar Styling --- */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}

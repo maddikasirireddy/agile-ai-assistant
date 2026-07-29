@@ -1,0 +1,8 @@
+{
+  "policy": {
+    "return_window": "We offer a hassle-free 7-day return policy for all unused and unopened products from the date of delivery.",
+    "refunds": "Once we receive and inspect the returned item, your refund will be processed to your original payment method within 5-7 business days. For Cash on Delivery (COD) orders, refunds are processed via bank transfer.",
+    "cancellations": "You can cancel your order anytime before it is shipped by contacting customer support. Once shipped, orders cannot be cancelled but can be returned in accordance with our return policy.",
+    "damaged_items": "If you receive a damaged or incorrect product, please contact us within 24 hours of delivery with unboxing photos/videos, and we will issue a free replacement immediately."
+  }
+}
