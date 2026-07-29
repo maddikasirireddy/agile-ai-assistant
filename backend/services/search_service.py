@@ -66,8 +66,8 @@ def search_products_local(products: List[Dict[str, Any]], query: str) -> List[Di
         short_desc = product.get("short_description", "")
         desc = product.get("description", "")
         
-        categories = [c["name"] for c in product.get("categories", [])]
-        tags = [t["name"] for t in product.get("tags", [])]
+        categories = [c["name"] if isinstance(c, dict) else str(c) for c in product.get("categories", [])]
+        tags = [t["name"] if isinstance(t, dict) else str(t) for t in product.get("tags", [])]
         
         norm_name = normalize_text(name)
         norm_short_desc = normalize_text(short_desc)

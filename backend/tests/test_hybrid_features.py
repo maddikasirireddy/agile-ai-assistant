@@ -108,21 +108,44 @@ class TestHybridFeatures(unittest.TestCase):
             {"role": "user", "text": "Tell me about Neem Soap."},
             {"role": "ai", "text": reply}
         ]
-        reply, cart = run_hybrid_chat_flow("Price?", history, cart, session_id=sid)
-        self.assertIn("price of **neem soap - handmade** is ₹200", reply.lower())
+        reply_price, cart = run_hybrid_chat_flow("Price?", history, cart, session_id=sid)
+        self.assertIn("price of **neem soap - handmade** is ₹200", reply_price.lower())
+
+        # ====================================================
+        # Test 1b: Typo and Direct Actions
+        # ====================================================
+        reset_session(sid)
+        cart = []
+        
+        # User: Tell me about Neem sooap (testing typo)
+        reply_typo, cart = run_hybrid_chat_flow("Tell me about Neem sooap", [], cart, session_id=sid)
+        self.assertIn("Neem Soap - Handmade", reply_typo)
+        
+        # User: What's the price of Neem Soap?
+        reset_session(sid)
+        reply_price2, cart = run_hybrid_chat_flow("What's the price of Neem Soap?", [], cart, session_id=sid)
+        self.assertIn("price of **neem soap - handmade** is ₹200", reply_price2.lower())
+        
+        # User: Add Neem Soap to my cart
+        reset_session(sid)
+        reply_add, cart = run_hybrid_chat_flow("Add Neem Soap to my cart", [], cart, session_id=sid)
+        self.assertIn("added", reply_add.lower())
+        self.assertEqual(len(cart), 1)
+        self.assertEqual(cart[0]["product_id"], 9325)
 
         # ====================================================
         # Test 2
         # ====================================================
         reset_session(sid)
+        cart = []
         
-        # User: Recommend a soap for acne.
-        reply, cart = run_hybrid_chat_flow("Recommend a soap for acne.", [], cart, session_id=sid)
+        # User: Recommend a product for acne.
+        reply, cart = run_hybrid_chat_flow("Recommend a product for acne.", [], cart, session_id=sid)
         self.assertIn("Anti-Acne Serum", reply) # (Highest ranked matching concern product)
         
         # User: Tell me about that product.
         history = [
-            {"role": "user", "text": "Recommend a soap for acne."},
+            {"role": "user", "text": "Recommend a product for acne."},
             {"role": "ai", "text": reply}
         ]
         reply, cart = run_hybrid_chat_flow("Tell me about that product.", history, cart, session_id=sid)

@@ -302,7 +302,11 @@ def run_hybrid_chat_flow(
         if len(matching_products) == 1:
             target_product = matching_products[0]
             memory.current_product = target_product
+            if intent == "unknown":
+                intent = "product_information"
         elif len(matching_products) > 1:
+            if intent == "unknown":
+                intent = "product_information"
             # Check if matching intent is product question/action
             if intent in (
                 "ingredient_information", "product_price", "product_availability", 

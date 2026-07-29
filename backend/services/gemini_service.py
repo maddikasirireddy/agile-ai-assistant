@@ -41,7 +41,11 @@ def search_product(query: str) -> str:
         result = "Matching products found in catalog:\n"
         for p in matches:
             price = p.get('price', 'N/A')
-            img_src = p.get("images")[0] if p.get("images") else ""
+            images = p.get("images", [])
+            img_src = ""
+            if images:
+                first_img = images[0]
+                img_src = first_img.get("src") if isinstance(first_img, dict) else str(first_img)
             desc = p.get('short_description') or p.get('description', '')
             desc_clean = re.sub(r'<[^>]+>', '', desc).strip()
             if len(desc_clean) > 120:
