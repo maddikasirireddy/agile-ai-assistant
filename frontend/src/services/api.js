@@ -6,8 +6,8 @@
 
 import axios from 'axios'
 
-// Base URL of our FastAPI backend (running on port 8000)
-const API_BASE_URL = 'http://localhost:8000'
+// Base URL of our FastAPI backend (configured via environment variables)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 // Create a reusable Axios instance with default settings
 const apiClient = axios.create({
