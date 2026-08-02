@@ -34,7 +34,7 @@ export const sendMessage = async (message, history = [], cart = [], customerId =
       cart, 
       customer_id: customerId 
     })
-    // The backend returns: { reply: "...", cart: [...] }
+    // The backend returns: { reply: "...", cart: [...], cart_actions: [...] }
     return response.data
   } catch (error) {
     // Provide a friendly error message instead of crashing

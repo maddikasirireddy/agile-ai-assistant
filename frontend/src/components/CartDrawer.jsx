@@ -22,9 +22,9 @@ const CartDrawer = ({ isOpen, onClose, cart, onUpdateQuantity, onRemove, onClear
 
   const handleCheckout = () => {
     if (cart.length === 0) return
-    // Generate WooCommerce single-item checkout redirect link for the first item
-    const firstItem = cart[0]
-    const checkoutUrl = `https://agilewellness.in/checkout/?add-to-cart=${firstItem.product_id}&quantity=${firstItem.quantity}`
+    // Proceed directly to the WooCommerce checkout! 
+    // The PHP session cart is already synced via the Store API.
+    const checkoutUrl = `https://agilewellness.in/checkout/`
     window.open(checkoutUrl, '_blank', 'noopener,noreferrer')
   }
 
@@ -124,12 +124,6 @@ const CartDrawer = ({ isOpen, onClose, cart, onUpdateQuantity, onRemove, onClear
                 <span>₹{subtotal.toFixed(2)}</span>
               </div>
             </div>
-
-            {cart.length > 1 && (
-              <p className="cart-note">
-                💡 WooCommerce checkout link will load starting with your first item: <strong>{cart[0].name}</strong>. Add others on the store checkout page.
-              </p>
-            )}
 
             <div className="cart-actions">
               <button className="clear-cart-btn" onClick={onClear}>

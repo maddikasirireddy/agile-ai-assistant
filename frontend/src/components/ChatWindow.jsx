@@ -27,21 +27,26 @@ const SUGGESTIONS = [
  * @param {Function} props.onAddItemsToCart — callback to add multiple products to cart
  */
 const ChatWindow = ({ messages, isLoading, onSuggest, onAddItemsToCart }) => {
-  // Ref attached to the invisible div at the bottom of the list
-  const bottomRef = useRef(null)
+  const containerRef = useRef(null)
 
   // Scroll to bottom whenever messages or loading state changes
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight
+    }
   }, [messages, isLoading])
 
   return (
-    <div className="chat-window" role="log" aria-live="polite" aria-label="Chat conversation">
+    <div className="chat-window" ref={containerRef} role="log" aria-live="polite" aria-label="Chat conversation">
 
       {/* ── Welcome screen — shown only when no messages exist ── */}
       {messages.length === 0 && !isLoading && (
         <div className="welcome-state">
-          <div className="welcome-icon">✦</div>
+          <div className="welcome-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </div>
           <h2>Welcome to Agile Wellness AI</h2>
           <p>I am your shopping and wellness assistant. Ask me to recommend products, track your packages, show your order history, or reorder previous purchases.</p>
 
@@ -76,8 +81,6 @@ const ChatWindow = ({ messages, isLoading, onSuggest, onAddItemsToCart }) => {
       {/* ── Typing indicator — shown while AI is generating a reply ── */}
       {isLoading && <TypingIndicator />}
 
-      {/* Invisible anchor element used to scroll to bottom */}
-      <div ref={bottomRef} />
     </div>
   )
 }

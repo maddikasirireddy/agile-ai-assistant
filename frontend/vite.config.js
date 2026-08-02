@@ -6,5 +6,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,  // default dev server port (must match backend CORS setting)
+    proxy: {
+      '/wp-json': {
+        target: 'https://agilewellness.in',
+        changeOrigin: true,
+      }
+    }
   },
 })

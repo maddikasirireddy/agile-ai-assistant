@@ -5,9 +5,12 @@
   align-items: flex-end;
   gap: 10px;
   padding: 16px 20px;
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
-  flex-shrink: 0; /* prevent input bar from shrinking */
+  background: white;
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  box-shadow: 0 -10px 20px rgba(0,0,0,0.03);
 }
 
 /* ── Text area ── */
@@ -15,8 +18,8 @@
   flex: 1;
   resize: none;
   background: var(--color-surface-2);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-input);
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 24px;
   color: var(--color-text);
   font-family: var(--font-family);
   font-size: 14.5px;
@@ -47,10 +50,10 @@
 .send-btn {
   width: 46px;
   height: 46px;
-  border-radius: 12px;
+  border-radius: 50%;
   border: none;
-  background: var(--color-send-btn);
-  color: #0d1117;
+  background: linear-gradient(135deg, #60863a, #4e6e2e);
+  color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
