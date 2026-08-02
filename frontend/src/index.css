@@ -51,8 +51,7 @@ html, body, #root {
   background: transparent !important;
   margin: 0 !important;
   padding: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
+  pointer-events: none !important;
 }
 
 body {
@@ -61,7 +60,6 @@ body {
   line-height: var(--line-height-base);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
-  overflow: hidden; /* prevent outer scroll */
 }
 
 /* --- Scrollbar Styling --- */
