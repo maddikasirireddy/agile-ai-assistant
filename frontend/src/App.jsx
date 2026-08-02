@@ -268,14 +268,6 @@ const App = () => {
   // ── Render ──────────────────────────────────────────────────
   return (
     <>
-      {/* Greeting Bubble */}
-      {!isChatOpen && !hasOpened && (
-        <div className="greeting-bubble" onClick={() => { setIsChatOpen(true); setHasOpened(true); }}>
-          <p>👋 Hi!</p>
-          <p>Need help choosing the right wellness products?</p>
-        </div>
-      )}
-
       {/* Floating Chat Button */}
       {!isChatOpen && (
         <button
