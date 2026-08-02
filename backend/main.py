@@ -26,7 +26,8 @@ allowed_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://agilewellness.in",
-    "https://www.agilewellness.in"
+    "https://www.agilewellness.in",
+    "https://agile-ai-assistant.vercel.app"
 ]
 env_cors = os.getenv("ALLOWED_ORIGINS")
 if env_cors:
