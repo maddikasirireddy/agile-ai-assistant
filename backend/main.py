@@ -24,7 +24,9 @@ app = FastAPI(
 # Allow local React dev server (http://localhost:5173) and production configurations
 allowed_origins = [
     "http://localhost:5173",
-    "http://127.0.0.1:5173"
+    "http://127.0.0.1:5173",
+    "https://agilewellness.in",
+    "https://www.agilewellness.in"
 ]
 env_cors = os.getenv("ALLOWED_ORIGINS")
 if env_cors:
