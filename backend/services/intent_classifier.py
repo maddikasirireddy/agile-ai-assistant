@@ -25,8 +25,9 @@ def extract_entities(message: str) -> Dict[str, Any]:
     - product_browsing (browsing multiple products, categories, or filtering)
     - product_detail (asking about ingredients, usage, price of a product)
     - recommendation (asking for advice for a concern)
-    - add_to_cart
-    - remove_from_cart
+    - add_to_cart (e.g., "Add it to my cart", "Add this", "Buy this", "Put it in my cart", "I want this")
+    - remove_from_cart (e.g., "Remove it", "Remove this from my cart")
+    - quantity_change (e.g., "Increase quantity", "Make it two")
     - view_cart
     - track_order
     - reorder

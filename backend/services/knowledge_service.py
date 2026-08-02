@@ -291,11 +291,11 @@ def run_hybrid_chat_flow(
                 return reply, cart_var.get()
         else:
             # Pronoun/Context reference fallback
-            is_explicit_pronoun = any(term in message.lower() for term in ["it", "that", "this", "those", "them"])
+            is_explicit_pronoun = any(term in message.lower() for term in ["it", "that", "this", "those", "them", "one", "two"])
             if (
                 intent in (
                     "product_detail", "product_search", "add_to_cart", 
-                    "remove_from_cart"
+                    "remove_from_cart", "quantity_change", "buy_now", "checkout"
                 ) or
                 is_explicit_pronoun or
                 any(term in message.lower() for term in ["soap", "shampoo", "powder", "oil", "butter", "lotion", "serum"])

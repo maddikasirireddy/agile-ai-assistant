@@ -3,7 +3,7 @@
  * Connects directly to WooCommerce /wp-json/wc/store/v1/cart endpoint
  */
 
-const STORE_API = '/wp-json/wc/store/v1/cart';
+const STORE_API = 'https://agilewellness.in/wp-json/wc/store/v1/cart';
 
 let cachedNonce = sessionStorage.getItem('wc_nonce') || '';
 let cachedCartToken = sessionStorage.getItem('wc_cart_token') || '';
@@ -41,9 +41,12 @@ const mapWcCartToLocal = (wcCartData) => {
 };
 
 export const fetchCart = async () => {
-  const res = await fetch(STORE_API, { headers: getHeaders() });
+  const res = await fetch(STORE_API, { 
+    headers: getHeaders(),
+    credentials: "include"
+  });
   captureHeaders(res);
-  if (!res.ok) throw new Error('Failed to fetch cart from WooCommerce');
+  if (!res.ok) throw new Error(`Failed to fetch cart from WooCommerce (${res.status} ${res.statusText})`);
   const data = await res.json();
   return mapWcCartToLocal(data);
 };
@@ -53,10 +56,11 @@ export const addToCart = async (productId, quantity = 1) => {
   const res = await fetch(`${STORE_API}/items`, {
     method: 'POST',
     headers: getHeaders(),
+    credentials: "include",
     body: JSON.stringify({ id: productId, quantity })
   });
   captureHeaders(res);
-  if (!res.ok) throw new Error('Failed to add item to WooCommerce cart');
+  if (!res.ok) throw new Error(`Failed to add item to WooCommerce cart (${res.status} ${res.statusText})`);
   const data = await res.json();
   return mapWcCartToLocal(data);
 };
@@ -66,10 +70,11 @@ export const updateCartItem = async (key, quantity) => {
   const res = await fetch(`${STORE_API}/items/${key}`, {
     method: 'PUT',
     headers: getHeaders(),
+    credentials: "include",
     body: JSON.stringify({ quantity })
   });
   captureHeaders(res);
-  if (!res.ok) throw new Error('Failed to update item in WooCommerce cart');
+  if (!res.ok) throw new Error(`Failed to update item in WooCommerce cart (${res.status} ${res.statusText})`);
   const data = await res.json();
   return mapWcCartToLocal(data);
 };
@@ -78,10 +83,11 @@ export const removeCartItem = async (key) => {
   if (!cachedNonce) await fetchCart();
   const res = await fetch(`${STORE_API}/items/${key}`, {
     method: 'DELETE',
-    headers: getHeaders()
+    headers: getHeaders(),
+    credentials: "include"
   });
   captureHeaders(res);
-  if (!res.ok) throw new Error('Failed to remove item from WooCommerce cart');
+  if (!res.ok) throw new Error(`Failed to remove item from WooCommerce cart (${res.status} ${res.statusText})`);
   const data = await res.json();
   return mapWcCartToLocal(data);
 };

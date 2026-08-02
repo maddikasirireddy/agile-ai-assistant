@@ -74,8 +74,19 @@ def add_to_cart_logic(
             if new_qty <= 0:
                 return remove_from_cart_logic(cart, product_id)
             item["quantity"] = new_qty
-            msg = f"Updated '{product_name}' quantity in your cart. New quantity: {item['quantity']}."
-            logger.info(msg)
+            
+            # Calculate subtotal
+            subtotal = sum(cart_item["price"] * cart_item["quantity"] for cart_item in updated_cart)
+            
+            msg = f"✅ Updated **{product_name}** quantity in your cart.\n\n"
+            msg += "### Current Cart\n"
+            for cart_item in updated_cart:
+                item_price = f"₹{cart_item['price']:.2f}"
+                msg += f"• {cart_item['name']} × {cart_item['quantity']} — {item_price}\n"
+            msg += f"\n**Subtotal: ₹{subtotal:.2f}**\n\n"
+            msg += "[Proceed to Checkout](https://agilewellness.in/checkout/) | [View Cart](https://agilewellness.in/cart/)"
+            
+            logger.info(f"Updated '{product_name}' quantity to {item['quantity']}.")
             return updated_cart, msg
 
     if quantity <= 0:
@@ -90,8 +101,19 @@ def add_to_cart_logic(
         "image": img_src
     }
     updated_cart.append(new_item)
-    msg = f"Added {quantity}x '{product_name}' (ID: {product_id}, Price: ₹{product_price:.2f}) to your cart."
-    logger.info(msg)
+
+    # Calculate subtotal
+    subtotal = sum(item["price"] * item["quantity"] for item in updated_cart)
+    
+    msg = f"✅ **{product_name}** has been added to your cart.\n\n"
+    msg += "### Current Cart\n"
+    for item in updated_cart:
+        item_price = f"₹{item['price']:.2f}"
+        msg += f"• {item['name']} × {item['quantity']} — {item_price}\n"
+    msg += f"\n**Subtotal: ₹{subtotal:.2f}**\n\n"
+    msg += "[Proceed to Checkout](https://agilewellness.in/checkout/) | [View Cart](https://agilewellness.in/cart/)"
+    
+    logger.info(f"Added {quantity}x '{product_name}' (ID: {product_id}, Price: ₹{product_price:.2f}) to cart.")
     return updated_cart, msg
 
 
