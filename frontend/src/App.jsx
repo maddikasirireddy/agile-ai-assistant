@@ -59,6 +59,12 @@ const App = () => {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isChatOpen])
 
+  // ── Notify Parent Window ───────────────────────────────────
+  useEffect(() => {
+    // Send message to parent WordPress site to resize the iframe dynamically
+    window.parent.postMessage({ type: 'AGILE_CHAT_STATE', isOpen: isChatOpen }, '*')
+  }, [isChatOpen])
+
   // ── Helper: append a message to the chat history ───────────
   const appendMessage = (role, text, isError = false) => {
     setMessages((prev) => [
