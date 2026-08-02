@@ -47,21 +47,38 @@ class WooCommerceService:
         logger.info("Cache expired or empty. Querying WooCommerce API for products...")
         start_time = time.perf_counter()
         try:
-            # Fetch up to 100 published products
-            response = self.api.get("products", params={"per_page": 100, "status": "publish"})
+            page = 1
+            all_raw_products = []
+            while True:
+                response = self.api.get("products", params={"per_page": 100, "status": "publish", "page": page})
+                
+                if response.status_code not in (200, 201):
+                    logger.error(
+                        f"WooCommerce returned error code {response.status_code} during products fetch page {page}: {response.text}"
+                    )
+                    break
+                    
+                products_page = response.json()
+                if not products_page:
+                    break
+                    
+                all_raw_products.extend(products_page)
+                
+                total_pages = int(response.headers.get("X-WP-TotalPages", 1))
+                if page >= total_pages:
+                    break
+                    
+                page += 1
+                
             elapsed = time.perf_counter() - start_time
-            logger.info(f"WooCommerce API GET /products call completed in {elapsed:.2f}s")
+            logger.info(f"WooCommerce API GET /products fetched {len(all_raw_products)} items across {page} pages in {elapsed:.2f}s")
             
-            if response.status_code in (200, 201):
-                raw_products = response.json()
-                enriched_products = [self._enrich_product(p) for p in raw_products]
+            if all_raw_products:
+                enriched_products = [self._enrich_product(p) for p in all_raw_products]
                 global_cache.set(cache_key, enriched_products)
                 logger.info(f"Successfully cached {len(enriched_products)} enriched products.")
                 return enriched_products
             else:
-                logger.error(
-                    f"WooCommerce returned error code {response.status_code} during products fetch: {response.text}"
-                )
                 stale = global_cache.get_stale(cache_key)
                 if stale is not None:
                     logger.warning("Falling back to stale products cache.")

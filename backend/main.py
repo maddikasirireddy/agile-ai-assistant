@@ -119,10 +119,24 @@ async def chat(chat_request: ChatRequest, fastapi_request: Request):
         session_id=session_id
     )
 
+    # Diff the cart to generate cart_actions for the frontend WooCommerce sync
+    old_cart_dict = {item.product_id: item.quantity for item in chat_request.cart}
+    new_cart_dict = {item.get("product_id"): item.get("quantity") for item in updated_cart}
+    
+    cart_actions = []
+    for pid, qty in new_cart_dict.items():
+        if pid is not None and old_cart_dict.get(pid) != qty:
+            cart_actions.append({"action": "set_quantity", "product_id": pid, "quantity": qty})
+            
+    for pid in old_cart_dict:
+        if pid not in new_cart_dict:
+            cart_actions.append({"action": "set_quantity", "product_id": pid, "quantity": 0})
+
     # Return response and set session cookie
     response = ChatResponse(
         reply=reply,
-        cart=updated_cart
+        cart=updated_cart,
+        cart_actions=cart_actions
     )
     response_obj = JSONResponse(content=response.dict())
     response_obj.set_cookie(

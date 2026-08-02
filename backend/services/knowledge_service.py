@@ -2,7 +2,8 @@ import time
 import logging
 import re
 from typing import List, Dict, Any, Tuple, Optional
-from services.intent_classifier import classify_intent
+from services.intent_classifier import extract_entities
+from services.search_service import search_products_local
 from services.woocommerce_service import wc_service
 from services.faq_service import (
     get_shipping_info, 
@@ -20,86 +21,6 @@ from services.session_service import get_session_state, update_session_state, re
 
 logger = logging.getLogger("agile_wellness")
 
-def normalize_string(s: str) -> str:
-    """Removes all spaces, hyphens, and punctuation, converting to lowercase."""
-    return re.sub(r"[^\w]", "", s.lower())
-
-def find_matching_products(message: str, products: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """
-    Finds matching products using exact names, normalized names, fuzzy matches, and synonyms.
-    Resolves 'lipbalm'/'lip balm' -> lip butter products.
-    """
-    msg = message.lower().strip()
-    msg_words = set(re.findall(r"\w+", msg))
-    
-    synonym_map = {
-        "lipbalm": "lip butter",
-        "lip balm": "lip butter",
-        "lipbutter": "lip butter",
-        "lip butter": "lip butter",
-        "neem soap": "neem soap",
-        "charcoal soap": "charcoal soap",
-        "lavender soap": "lavender soap",
-        "onion shampoo": "onion shampoo",
-        "orange powder": "orange peel powder"
-    }
-    
-    query_term = msg
-    for syn, target in synonym_map.items():
-        if syn in msg:
-            query_term = msg.replace(syn, target)
-            break
-
-    # Strip question stop words to find candidate term
-    query_term = re.sub(
-        r"\b(what is the price of|what is|price of|how do i use|how to use|is|in stock|available|ingredients in|whats in|what is in|composition of|where is|add|remove|delete|buy|purchase|tell me about|tell me|show me|details on|info on|information on|whats|what|to my cart|to cart|in my cart|in cart|from my cart|from cart|into my cart|into cart)\b", 
-        "", 
-        query_term
-    ).strip()
-    query_term = re.sub(r"[^\w\s\-\&]", "", query_term).strip()
-    
-    exact_matches = []
-    close_matches = []
-    
-    generic_words = {"soap", "shampoo", "powder", "oil", "butter", "lotion", "serum", "cream", "wellness"}
-    
-    sorted_products = sorted(products, key=lambda x: len(x.get("name", "")), reverse=True)
-    
-    for p in sorted_products:
-        name = p.get("name", "").lower()
-        clean_name = re.sub(r"\s*[\(\[].*$", "", name).strip()
-        clean_name = re.sub(r"\s+\-\s+.*$", "", clean_name).strip()
-        
-        if len(query_term) > 3:
-            if normalize_string(query_term) == normalize_string(clean_name):
-                exact_matches.append(p)
-                continue
-            if normalize_string(query_term) in normalize_string(clean_name) or normalize_string(clean_name) in normalize_string(query_term):
-                exact_matches.append(p)
-                continue
-
-        if clean_name in generic_words:
-            continue
-            
-        if clean_name in msg or name in msg:
-            exact_matches.append(p)
-            continue
-
-        clean_words = set(re.findall(r"\w+", clean_name))
-        significant_words = {w for w in clean_words if w not in generic_words}
-        if significant_words and significant_words.issubset(msg_words):
-            close_matches.append(p)
-
-    matches = exact_matches if exact_matches else close_matches
-    
-    unique_matches = []
-    seen = set()
-    for p in matches:
-        if p["id"] not in seen:
-            unique_matches.append(p)
-            seen.add(p["id"])
-            
-    return unique_matches
 
 def resolve_clarification(user_text: str, candidates: List[Dict[str, Any]], session_id: str) -> Optional[Dict[str, Any]]:
     """Resolves which product candidate is selected by name or ordinal reference."""
@@ -195,8 +116,15 @@ def format_product_detail(intent: str, p: Dict[str, Any]) -> str:
     except Exception:
         price_str = f"₹{p.get('price')}"
 
+def format_product_detail(intent: str, product: Dict[str, Any]) -> str:
+    """Extracts the most relevant detail from the product based on intent."""
+    p_name = product.get("name", "This product")
+    price_str = f"₹{product.get('price', 0)}"
+    permalink = product.get("permalink", "")
+    desc_clean = re.sub(r'<[^>]+>', '', product.get("description", "") or product.get("short_description", "")).strip()
+
     if intent == "ingredient_information":
-        ingredients = p.get("ingredients", [])
+        ingredients = product.get("ingredients", [])
         if ingredients:
             return f"**{p_name}** contains the following ingredients:\n\n" + "\n".join([f"- {i.capitalize()}" for i in ingredients])
         return f"I couldn't find a detailed ingredients list for **{p_name}**. Please view details: [View Product]({permalink})"
@@ -205,7 +133,7 @@ def format_product_detail(intent: str, p: Dict[str, Any]) -> str:
         return f"The price of **{p_name}** is {price_str}. [View Product]({permalink})"
         
     elif intent == "product_availability":
-        status = "In Stock" if p.get("stock_status") == "instock" else "Out of Stock"
+        status = "In Stock" if product.get("stock_status") == "instock" else "Out of Stock"
         return f"**{p_name}** is currently **{status}**. [View Product]({permalink})"
         
     elif intent == "product_usage":
@@ -217,7 +145,7 @@ def format_product_detail(intent: str, p: Dict[str, Any]) -> str:
     weight_match = re.search(r"\b\d+\s*(?:ml|g|gm|kg|oz|ounce)\b", p_name + " " + desc_clean, re.IGNORECASE)
     weight_str = f"**Size/Weight:** {weight_match.group(0)}\n" if weight_match else ""
     
-    benefits = p.get("benefits", [])
+    benefits = product.get("benefits", [])
     benefits_str = f"**Key Benefits:** {', '.join(benefits[:3])}\n" if benefits else ""
     
     options_match = re.search(r"\((Mango, Strawberry, Chocolate[^\)]*)\)", p_name, re.IGNORECASE)
@@ -257,26 +185,58 @@ def run_hybrid_chat_flow(
         
     memory = SessionMemory(session_id)
 
-    # 2. Intent Classification
-    intent = classify_intent(message)
-    logger.info(f"Hybrid Pipeline: Classified intent '{intent}' for session '{session_id}'")
+    # 2. Intent & Entity Extraction
+    entities = extract_entities(message)
+    intent = entities.get("intent", "unknown")
+    logger.info(f"Hybrid Pipeline: Extracted intent '{intent}' for session '{session_id}'")
 
     # Update dynamic state context parameters
-    concern = extract_concern(message)
+    concern = entities.get("concern")
     if concern:
         memory.current_concern = concern
-    for cat in ["soap", "shampoo", "powder", "oil", "butter", "lotion", "serum"]:
-        if cat in message.lower():
-            memory.current_category = cat
+    category = entities.get("category")
+    if category:
+        memory.current_category = category
 
     update_session_state(session_id, {
         "last_user_action": message,
-        "shopping_action": intent if "cart" in intent or intent in ("checkout", "buy_now", "quantity_change") else None
+        "shopping_action": intent if intent in ("add_to_cart", "remove_from_cart", "checkout", "buy_now", "quantity_change", "view_cart") else None
     })
 
-    # 3. Product Resolution (Exact, Normalized, Fuzzy)
-    matching_products = find_matching_products(message, products)
+    # 3. Product Resolution (Unified local search engine)
+    filters = {}
+    if entities.get("max_price"): filters["max_price"] = float(entities["max_price"])
+    if entities.get("min_price"): filters["min_price"] = float(entities["min_price"])
+    
+    # We want to search based on product or ingredient if specified
+    search_query = message
+    if entities.get("product"):
+        search_query = entities["product"]
+    elif entities.get("ingredient"):
+        search_query = entities["ingredient"]
+    elif entities.get("category"):
+        search_query = entities["category"]
+        
+    scored_matches = search_products_local(products, search_query, filters)
+    
+    # Separate into high-confidence (exact) matches and close matches
+    exact_match_threshold = 80.0
+    close_match_threshold = 20.0
+    
+    exact_matches = [p for p in scored_matches if p.get("_search_score", 0) >= exact_match_threshold]
+    close_matches = [p for p in scored_matches if p.get("_search_score", 0) >= close_match_threshold]
+    
+    # If there are exact matches, use them to avoid prompting clarification among weak matches
+    matching_products = exact_matches if exact_matches else close_matches
+    
     target_product = None
+    
+    # Auto-resolve if the top match is significantly better than the rest
+    if len(matching_products) > 1:
+        top_score = matching_products[0].get("_search_score", 0)
+        second_score = matching_products[1].get("_search_score", 0)
+        if top_score > second_score + 100 or top_score >= second_score * 1.5:
+            matching_products = [matching_products[0]]
 
     # Check if we are resolving a pending clarification
     if memory.last_clarification_candidates:
@@ -309,8 +269,7 @@ def run_hybrid_chat_flow(
                 intent = "product_information"
             # Check if matching intent is product question/action
             if intent in (
-                "ingredient_information", "product_price", "product_availability", 
-                "product_usage", "product_information", "add_to_cart", "remove_from_cart", "buy_now"
+                "product_detail", "product_search", "add_to_cart", "remove_from_cart"
             ):
                 update_session_state(session_id, {
                     "clarification_candidates": matching_products,
@@ -335,9 +294,8 @@ def run_hybrid_chat_flow(
             is_explicit_pronoun = any(term in message.lower() for term in ["it", "that", "this", "those", "them"])
             if (
                 intent in (
-                    "ingredient_information", "product_price", "product_availability", 
-                    "product_usage", "product_information", "add_to_cart", 
-                    "remove_from_cart", "buy_now", "quantity_change"
+                    "product_detail", "product_search", "add_to_cart", 
+                    "remove_from_cart"
                 ) or
                 is_explicit_pronoun or
                 any(term in message.lower() for term in ["soap", "shampoo", "powder", "oil", "butter", "lotion", "serum"])
@@ -364,113 +322,90 @@ def run_hybrid_chat_flow(
     gemini_called = False
 
     try:
-        # 4. Routing Flow
-
-        # Greetings & FAQS
-        if intent == "greeting":
-            reply = "Hello! Welcome to Agile Wellness. I am your shopping and wellness assistant. How can I help you today?"
-        elif intent == "goodbye":
-            reply = "Thank you for visiting Agile Wellness. Have a beautiful, healthy day ahead! Goodbye!"
-        elif intent == "thanks":
-            reply = "You're very welcome! If you need anything else, just ask."
-        elif intent == "shipping":
-            reply = get_shipping_info()
-            source = "Local Shipping FAQ"
-        elif intent == "returns":
-            reply = get_returns_info()
-            source = "Local Returns FAQ"
-        elif intent == "payment":
-            reply = get_payment_info()
-            source = "Local Payments FAQ"
-        elif intent == "contact":
-            reply = get_contact_info()
-            source = "Local Contact FAQ"
-        elif intent == "store_information":
-            reply = get_store_info()
-            source = "Local Store FAQ"
-        elif intent == "faq":
-            faq_ans = lookup_faq_answer(message)
-            reply = faq_ans if faq_ans else "All Agile Wellness products are 100% organic, natural, and free from chemical additives. Feel free to ask about our ingredients or safety testing!"
-            source = "Local FAQ"
-
-        # WooCommerce Order status
-        elif intent == "order_status":
-            if customer_id is None:
-                reply = "Please log in to view your orders."
-            else:
-                reply = track_latest_order(customer_id)
-            source = "WooCommerce Order Lookup"
-
-        # Shopping Action: Quantity Changes
-        elif intent == "quantity_change" and target_product:
-            pid = target_product.get("id")
-            current_qty = 1
-            for item in cart_var.get():
-                if item.get("product_id") == pid:
-                    current_qty = item.get("quantity", 1)
-            
-            if any(term in message.lower() for term in ["increase", "more", "add"]):
-                reply = add_to_cart(pid, 1)
-            elif any(term in message.lower() for term in ["decrease", "less", "reduce"]):
-                if current_qty > 1:
-                    reply = add_to_cart(pid, -1)
-                else:
-                    reply = remove_from_cart(pid)
-            source = "Local Cart Qty Action"
-
-        # Shopping Action: Add to Cart
-        elif intent == "add_to_cart":
-            logger.info(f"[CART DEBUG] selected_product before add: {target_product.get('name') if target_product else 'None'}")
+        # 4. Routing Flow (Priority Based)
+        
+        # 1. Cart Actions
+        if intent == "add_to_cart":
             if target_product:
-                logger.info(f"[CART DEBUG] Adding selected product: {target_product.get('name')}")
-                reply = add_to_cart(target_product.get("id"), 1)
+                qty = entities.get("quantity") or 1
+                reply = add_to_cart(target_product.get("id"), qty)
                 source = "Local Cart Add Action"
             else:
                 reply = "Which product would you like to add to your cart?"
-
-        # Shopping Action: Remove from Cart
+        
         elif intent == "remove_from_cart":
             if target_product:
                 reply = remove_from_cart(target_product.get("id"))
                 source = "Local Cart Remove Action"
             else:
                 reply = "Which product would you like to remove from your cart?"
-
-        # Shopping Action: View Cart
+                
         elif intent == "view_cart":
             reply = calculate_total()
             source = "Local Cart View Action"
 
-        # Shopping Action: Checkout / Buy Now
         elif intent in ("checkout", "buy_now"):
             if intent == "buy_now" and target_product:
-                add_to_cart(target_product.get("id"), 1)
+                qty = entities.get("quantity") or 1
+                add_to_cart(target_product.get("id"), qty)
                 reply = checkout()
                 source = "Local Buy Now Action"
             else:
                 reply = checkout()
                 source = "Local Checkout Action"
 
-        # Specific Product Details Questions (Using matched/contextual target product)
-        elif target_product and intent in (
-            "ingredient_information", "product_price", "product_availability", 
-            "product_usage", "product_information"
-        ):
-            reply = format_product_detail(intent, target_product)
-            source = "WooCommerce Product Details"
-
-        # Recommendation Intent (Remembering user concerns from memory)
-        elif intent == "product_recommendation" or (intent in ["skincare", "haircare", "babycare"] and not target_product) or (not target_product and concern):
-            query = message
-            if memory.current_concern and not any(kw in message.lower() for kw in ["skin", "hair", "dandruff", "acne", "baby", "rash"]):
-                query = f"{message} for {memory.current_concern}"
-            reply, top_product = get_product_recommendations(query)
+        # 2. Order Actions
+        elif intent in ("order_status", "track_order", "reorder", "order_history", "latest_order"):
+            if customer_id is None:
+                reply = "Please log in to view your orders."
+            else:
+                reply = track_latest_order(customer_id)
+            source = "WooCommerce Order Lookup"
+            
+        # 3. Recommendations
+        elif intent == "recommendation":
+            rec_query = entities.get("concern") or message
+            reply, top_product = get_product_recommendations(rec_query)
             if top_product:
                 target_product = top_product
                 memory.current_product = top_product
             source = "WooCommerce Product Recommendation"
 
-        # 5. Gemini Fallback
+        # 4. Filtered Browsing
+        elif intent == "product_browsing":
+            if matching_products:
+                reply = "Here are the top products that match your request:\n\n"
+                for p in matching_products[:5]:
+                    reply += f"- **{p.get('name')}** (₹{p.get('price', 0)})\n"
+                source = "Local Browsing Action"
+            else:
+                reply = "I couldn't find any products matching those criteria."
+                source = "Local Browsing Action"
+
+        # 5. Product Detail
+        elif intent == "product_detail":
+            if target_product:
+                # Default to product_information or ingredient based on user query
+                sub_intent = "ingredient_information" if entities.get("ingredient") else "product_information"
+                reply = format_product_detail(sub_intent, target_product)
+                source = "WooCommerce Product Details"
+            else:
+                reply = "Which product would you like details for?"
+                
+        elif intent == "product_search":
+            if target_product:
+                reply = format_product_detail("product_information", target_product)
+                source = "WooCommerce Product Search"
+            else:
+                reply = "I couldn't find that product."
+
+        # Greetings & FAQS
+        elif intent == "greeting":
+            reply = "Hello! Welcome to Agile Wellness. I am your shopping and wellness assistant. How can I help you today?"
+        elif intent == "goodbye":
+            reply = "Thank you for visiting Agile Wellness. Have a beautiful, healthy day ahead! Goodbye!"
+
+        # 6. Gemini Fallback
         if reply is None:
             logger.info("Local engine could not resolve query. Delegating to Gemini fallback...")
             reply, updated_cart = run_chat_session(message, history, cart_var.get(), customer_id)
@@ -513,5 +448,6 @@ def find_original_query_intent(history: List[Dict[str, Any]]) -> str:
     for msg in reversed(history):
         if msg.get("role") == "user":
             txt = msg.get("text", "")
-            return classify_intent(txt)
-    return "product_information"
+            entities = extract_entities(txt)
+            return entities.get("intent", "product_detail")
+    return "product_detail"

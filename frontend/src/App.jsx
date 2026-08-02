@@ -178,7 +178,7 @@ const App = () => {
                 }
               }
             }
-          } catch(err) {
+          } catch (err) {
             console.error("Cart action failed:", err);
           }
         }
@@ -236,7 +236,7 @@ const App = () => {
                 }
               }
             }
-          } catch(err) {
+          } catch (err) {
             console.error("Cart action failed:", err);
           }
         }
@@ -296,89 +296,89 @@ const App = () => {
 
           <div className="app-shell">
 
-            {/* Header */}
-            <header className="app-header">
-              <div className="header-brand">
-                <div className="header-logo">✦</div>
+          {/* Header */}
+          <header className="app-header">
+            <div className="header-brand">
+              <div className="header-logo">✦</div>
 
-              </div>
+            </div>
 
-              <div style={{ display: "flex", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center" }}>
 
-                <button
-                  className="cart-toggle-btn"
-                  onClick={() => setIsCartOpen(true)}
-                >
-                  🛒
+              <button
+                className="cart-toggle-btn"
+                onClick={() => setIsCartOpen(true)}
+              >
+                🛒
 
-                  {cart.length > 0 && (
-                    <span className="cart-badge-number">
-                      {cart.reduce((a, b) => a + b.quantity, 0)}
-                    </span>
-                  )}
-                </button>
-
-                {messages.length > 0 && (
-                  <button
-                    className="clear-btn"
-                    onClick={handleClear}
-                  >
-                    Clear
-                  </button>
+                {cart.length > 0 && (
+                  <span className="cart-badge-number">
+                    {cart.reduce((a, b) => a + b.quantity, 0)}
+                  </span>
                 )}
+              </button>
 
-                <div className="header-status">
-                  <div className="status-dot" />
-                  <span>Online</span>
-                </div>
-
-                {/* Minimize Button moved to header */}
+              {messages.length > 0 && (
                 <button
-                  className="minimize-btn"
-                  onClick={() => setIsChatOpen(false)}
-                  aria-label="Minimize chat"
+                  className="clear-btn"
+                  onClick={handleClear}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
+                  Clear
                 </button>
+              )}
 
+              <div className="header-status">
+                <div className="status-dot" />
+                <span>Online</span>
               </div>
-            </header>
 
-            {/* Chat */}
-            <main className="chat-body">
+              {/* Minimize Button moved to header */}
+              <button
+                className="minimize-btn"
+                onClick={() => setIsChatOpen(false)}
+                aria-label="Minimize chat"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
 
-              <ChatWindow
-                messages={messages}
-                isLoading={isLoading}
-                onSuggest={handleSuggest}
-                onAddItemsToCart={handleAddItemsToCart}
-              />
+            </div>
+          </header>
 
-              <InputBar
-                value={input}
-                onChange={setInput}
-                onSend={handleSend}
-                disabled={isLoading}
-              />
+          {/* Chat */}
+          <main className="chat-body">
 
-            </main>
-
-            {/* Cart Drawer */}
-
-            <CartDrawer
-              isOpen={isCartOpen}
-              onClose={() => setIsCartOpen(false)}
-              cart={cart}
-              onUpdateQuantity={handleUpdateQuantity}
-              onRemove={handleRemoveItem}
-              onClear={handleClearCart}
+            <ChatWindow
+              messages={messages}
+              isLoading={isLoading}
+              onSuggest={handleSuggest}
+              onAddItemsToCart={handleAddItemsToCart}
             />
 
-          </div>
+            <InputBar
+              value={input}
+              onChange={setInput}
+              onSend={handleSend}
+              disabled={isLoading}
+            />
+
+          </main>
+
+          {/* Cart Drawer */}
+
+          <CartDrawer
+            isOpen={isCartOpen}
+            onClose={() => setIsCartOpen(false)}
+            cart={cart}
+            onUpdateQuantity={handleUpdateQuantity}
+            onRemove={handleRemoveItem}
+            onClear={handleClearCart}
+          />
 
         </div>
+
+      </div>
       )}
     </>
   )

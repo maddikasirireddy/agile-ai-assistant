@@ -21,8 +21,14 @@ class ChatRequest(BaseModel):
     history: List[MessageHistoryItem] = []
     cart: List[CartItem] = []
 
+class CartAction(BaseModel):
+    """Represents an action to be taken on the shopping cart."""
+    action: str  # 'add', 'remove', 'update', 'clear'
+    product_id: Optional[int] = None
+    quantity: Optional[int] = None
 
 class ChatResponse(BaseModel):
     """Response payload schema for the /chat endpoint."""
     reply: str
     cart: List[CartItem]
+    cart_actions: Optional[List[CartAction]] = None
