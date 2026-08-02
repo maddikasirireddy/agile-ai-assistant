@@ -32,7 +32,7 @@ const renderInline = (text, keyPrefix = '') => {
       const linkText = part.slice(1, closeBracket)
       const url = part.slice(closeBracket + 2, -1)
       return (
-        <a key={key} href={url} target="_blank" rel="noopener noreferrer" className="chat-link">
+        <a key={key} href={url} target="_top" className="chat-link">
           {linkText}
         </a>
       )
