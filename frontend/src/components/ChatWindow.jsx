@@ -14,8 +14,8 @@ import './ChatWindow.css'
 const SUGGESTIONS = [
   '🌿 Show me neem products',
   '❤️ Recommend products for oily skin',
-  '📦 Track my order',
-  '🔄 Reorder my last package',
+  '🧴 Do you have natural face serums?',
+  '🫧 What do you recommend for hair fall?',
 ]
 
 /**
